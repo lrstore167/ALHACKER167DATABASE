@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ALHACKER167 Transaction Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #6a11cb;
+            --secondary-color: #2575fc;
+            --dark-bg: #121212;
+            --dark-card: #1e1e1e;
+            --dark-text: #f0f0f0;
+            --light-bg: #f8f9fa;
+            --light-card: #ffffff;
+            --light-text: #212529;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--light-bg);
+            color: var(--light-text);
+            transition: all 0.5s ease;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body.dark-mode {
+            background: var(--dark-bg);
+            color: var(--dark-text);
+        }
+
+        .card {
+            background: var(--light-card);
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+
+        .dark-mode .card {
+            background: var(--dark-card);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+        }
+
+        .dashboard-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            border-radius: 0 0 15px 15px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dashboard-header h1 {
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            cursor: pointer;
+            font-size: 1.5rem;
+            z-index: 1000;
+        }
+
+        .form-control, .form-select {
+            border-radius: 10px;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+        }
+
+        .dark-mode .form-control, .dark-mode .form-select {
+            background-color: #2d2d2d;
+            border-color: #444;
+            color: var(--dark-text);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border: none;
+            border-radius: 10px;
+            padding: 12px 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .table {
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .dark-mode .table {
+            background-color: var(--dark-card);
+            color: var(--dark-text);
+        }
+
+        .dark-mode .table th, .dark-mode .table td {
+            border-color: #444;
+        }
+
+        .dark-mode .table thead th {
+            background-color: #333;
+            color: var(--dark-text);
+        }
+
+        .dark-mode .table tbody tr:hover {
+            background-color: #333;
+        }
+
+        .summary-card {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .summary-card i {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            color: var(--secondary-color);
+        }
+
+        .summary-card .count {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .summary-card .label {
+            font-size: 1rem;
+            opacity: 0.8;
+        }
+
+        /* Animations */
+        @keyframes twinkle {
+            0% { opacity: 0.2; }
+            50% { opacity: 1; }
+            100% { opacity: 0.2; }
+        }
+
+        @keyframes meteor {
+            0% {
+                transform: translateX(0) translateY(0);
+                opacity: 1;
+            }
+            70% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateX(1000px) translateY(500px);
+                opacity: 0;
+            }
+        }
+
+        .star {
+            position: absolute;
+            background-color: white;
+            border-radius: 50%;
+            animation: twinkle 3s infinite;
+        }
+
+        .meteor {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: linear-gradient(to right, rgba(255,255,255,0), rgba(255,255,255,1));
+            border-radius: 50%;
+            animation: meteor 3s linear infinite;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(var(--primary-color), var(--secondary-color));
+            border-radius: 10px;
+        }
+
+        .dark-mode ::-webkit-scrollbar-track {
+            background: #333;
+        }
+
+        .dark-mode ::-webkit-scrollbar-thumb {
+            background: linear-gradient(#444, #555);
+        }
+
+        /* Notification */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            transform: translateX(200%);
+            transition: transform 0.3s ease;
+            z-index: 9999;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        /* Footer */
+        footer {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 1rem 0;
+            margin-top: 2rem;
+            text-align: center;
+            border-radius: 15px 15px 0 0;
+        }
+
+        /* Custom slider */
+        .slider-container {
+            position: relative;
+            margin: 20px 0;
+        }
+
+        .slider {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 10px;
+            border-radius: 5px;
+            background: #ddd;
+            outline: none;
+        }
+
+        .dark-mode .slider {
+            background: #444;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            cursor: pointer;
+        }
+
+        .slider::-moz-range-thumb {
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            cursor: pointer;
+        }
+
+        /* Loading spinner */
+        .spinner-container {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 9998;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .spinner-container.show {
+            display: flex;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid var(--secondary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Advanced filters */
+        .filter-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: rgba(0,0,0,0.03);
+            border-radius: 10px;
+        }
+
+        .dark-mode .filter-section {
+            background-color: rgba(255,255,255,0.05);
+        }
+    </style>
+</head>
+<body>
+    <!-- Stars and meteors -->
+    <div id="stars-container"></div>
+    <div id="meteors-container"></div>
+
+    <!-- Loading spinner -->
+    <div class="spinner-container" id="spinner">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Notification -->
+    <div class="notification" id="notification"></div>
+
+    <!-- Dashboard Header -->
+    <header class="dashboard-header">
+        <div class="theme-toggle" id="themeToggle">
+            <i class="fas fa-moon"></i>
+        </div>
+        <div class="container text-center">
+            <h1><i class="fas fa-coins me-2"></i>ALHACKER167 TRANSACTION DASHBOARD</h1>
+            <p class="lead">Manage and analyze your transaction data efficiently</p>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="fas fa-upload me-2"></i>Input Transaction Data</h5>
+                        <div class="mb-3">
+                            <label for="transactionData" class="form-label">Paste your transaction data here:</label>
+                            <textarea class="form-control" id="transactionData" rows="8" placeholder="Paste your data in the format: Akun pemain    Tanggal Jumlah Operator Bank Pembayaran Nomor Rekening Pembayar Nama Rekening Pembayar  ..."></textarea>
+                        </div>
+                        <div class="filter-section">
+                            <h6><i class="fas fa-filter me-2"></i>Advanced Filters</h6>
+                            <div class="row">
+                                <div class="col-md-4">
+    <label for="filterBank" class="form-label">Filter by Bank:</label>
+    <select class="form-select" id="filterBank">
+        <option value="">All Banks</option>
+        <option value="BRI">BRI</option>
+        <option value="BNI">BNI</option>
+        <option value="BCA">BCA</option>
+        <option value="MANDIRI">Mandiri</option>
+        <option value="BSI">BSI (Bank Syariah Indonesia)</option>
+        <option value="DANAMON">Danamon</option>
+        <option value="CIMB">CIMB Niaga</option>
+        <option value="MAYBANK">Maybank</option>
+        <option value="OCBC">OCBC NISP</option>
+        <option value="PANIN">Panin Bank</option>
+        <option value="PERMATA">Permata Bank</option>
+        <option value="DANA">DANA</option>
+        <option value="LINKAJA">LinkAja</option>
+        <option value="GOPAY">GoPay</option>
+        <option value="OVO">OVO</option>
+        <option value="SHOPEEPAY">ShopeePay</option>
+        <option value="OTHER">Other/Lainnya</option>
+    </select>
+</div>
+                                <div class="col-md-4">
+                                    <label for="filterMinAmount" class="form-label">Minimum Amount:</label>
+                                    <input type="number" class="form-control" id="filterMinAmount" placeholder="Min amount">
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="filterStatus" class="form-label">Transaction Status:</label>
+                                    <select class="form-select" id="filterStatus">
+                                        <option value="">All Statuses</option>
+                                        <option value="Pass">Pass</option>
+                                        <option value="Fail">Fail</option>
+                                        <option value="Pending">Pending</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary" id="processData"><i class="fas fa-cog me-2"></i>Process Data</button>
+                        <button class="btn btn-outline-secondary ms-2" id="clearData"><i class="fas fa-trash me-2"></i>Clear Data</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-3">
+                <div class="card summary-card">
+                    <i class="fas fa-university"></i>
+                    <div class="count" id="totalTransactions">0</div>
+                    <div class="label">Total Transactions</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card summary-card">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <div class="count" id="totalAmount">0</div>
+                    <div class="label">Total Amount</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card summary-card">
+                    <i class="fas fa-users"></i>
+                    <div class="count" id="uniqueAccounts">0</div>
+                    <div class="label">Unique Accounts</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card summary-card">
+                    <i class="fas fa-chart-line"></i>
+                    <div class="count" id="avgAmount">0</div>
+                    <div class="label">Average Amount</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="fas fa-table me-2"></i>Transaction Summary</h5>
+                        <div class="mb-3">
+                            <div class="slider-container">
+                                <label for="resultsSlider" class="form-label">Number of results to display: <span id="sliderValue">All</span></label>
+                                <input type="range" class="slider" id="resultsSlider" min="1" max="100" value="100">
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover" id="transactionTable">
+                                <thead>
+                                    <tr>
+                                        <th>Player Account</th>
+                                        <th>Bank</th>
+                                        <th>Account Number</th>
+                                        <th>Account Name</th>
+                                        <th>Amount</th>
+                                        <th>Date</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Data will be inserted here -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="d-flex justify-content-between mt-3">
+                            <button class="btn btn-primary" id="exportExcel"><i class="fas fa-file-excel me-2"></i>Export to Excel</button>
+                            <button class="btn btn-success" id="exportCSV"><i class="fas fa-file-csv me-2"></i>Export to CSV</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="mt-5">
+        <div class="container">
+            <p class="mb-0">@copyright ALHACKER167 2025</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script>
+        // Create stars
+        function createStars() {
+            const container = document.getElementById('stars-container');
+            for (let i = 0; i < 100; i++) {
+                const star = document.createElement('div');
+                star.classList.add('star');
+                star.style.width = `${Math.random() * 3}px`;
+                star.style.height = star.style.width;
+                star.style.left = `${Math.random() * 100}vw`;
+                star.style.top = `${Math.random() * 100}vh`;
+                star.style.animationDelay = `${Math.random() * 3}s`;
+                container.appendChild(star);
+            }
+        }
+
+        // Create meteors
+        function createMeteors() {
+            const container = document.getElementById('meteors-container');
+            for (let i = 0; i < 5; i++) {
+                const meteor = document.createElement('div');
+                meteor.classList.add('meteor');
+                meteor.style.left = `${Math.random() * 50}vw`;
+                meteor.style.top = `${Math.random() * 50}vh`;
+                meteor.style.animationDelay = `${Math.random() * 10}s`;
+                meteor.style.animationDuration = `${2 + Math.random() * 3}s`;
+                container.appendChild(meteor);
+            }
+        }
+
+        // Show loading spinner
+        function showSpinner(show) {
+            const spinner = document.getElementById('spinner');
+            if (show) {
+                spinner.classList.add('show');
+            } else {
+                spinner.classList.remove('show');
+            }
+        }
+
+        // Show notification
+        function showNotification(message, duration = 3000) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, duration);
+        }
+
+        // Toggle dark mode
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            const themeIcon = document.getElementById('themeToggle').querySelector('i');
+            
+            if (document.body.classList.contains('dark-mode')) {
+                themeIcon.classList.remove('fa-moon');
+                themeIcon.classList.add('fa-sun');
+                localStorage.setItem('darkMode', 'enabled');
+            } else {
+                themeIcon.classList.remove('fa-sun');
+                themeIcon.classList.add('fa-moon');
+                localStorage.setItem('darkMode', 'disabled');
+            }
+        }
+
+        // Check for saved dark mode preference
+        if (localStorage.getItem('darkMode') === 'enabled') {
+            toggleDarkMode();
+        }
+
+        // Process transaction data
+        function processData() {
+            const inputData = document.getElementById('transactionData').value.trim();
+            if (!inputData) {
+                showNotification('Please paste transaction data first!');
+                return;
+            }
+
+            showSpinner(true);
+
+            // Use setTimeout to allow UI to update before heavy processing
+            setTimeout(() => {
+                try {
+                    const lines = inputData.split('\n');
+                    const transactions = [];
+                    const uniqueAccounts = new Set();
+                    let totalAmount = 0;
+                    let hasHeader = false;
+
+                    // Check if first line is header
+                    const firstLine = lines[0].toLowerCase();
+                    if (firstLine.includes('akun pemain') && firstLine.includes('tanggal') && firstLine.includes('jumlah')) {
+                        hasHeader = true;
+                        lines.shift(); // Remove header line
+                    }
+
+                    // Process each line
+                    const accountMap = new Map(); // To track unique account number/name pairs
+                    
+                    lines.forEach(line => {
+                        if (!line.trim()) return; // Skip empty lines
+                        
+                        const columns = line.split('\t');
+                        if (columns.length >= 11) {
+                            const playerAccount = columns[0].trim();
+                            const date = columns[1].trim();
+                            const amount = parseFloat(columns[2].trim().replace(/[^\d.-]/g, '')) || 0;
+                            const bank = columns[3].trim();
+                            const accountNumber = columns[4].trim();
+                            const accountName = columns[5].trim();
+                            const status = columns[11] ? columns[11].trim() : 'Unknown';
+                            
+                            // Create unique key for account
+                            const accountKey = `${accountNumber}|${accountName}`;
+                            
+                            // Only add if this account hasn't been processed yet
+                            if (!accountMap.has(accountKey)) {
+                                accountMap.set(accountKey, true);
+                                
+                                transactions.push({
+                                    playerAccount: playerAccount,
+                                    date: date,
+                                    amount: amount,
+                                    bank: bank,
+                                    accountNumber: accountNumber,
+                                    accountName: accountName,
+                                    status: status
+                                });
+                            }
+                            
+                            uniqueAccounts.add(playerAccount);
+                            totalAmount += amount;
+                        }
+                    });
+
+                    // Apply filters
+                    const filteredTransactions = applyFilters(transactions);
+
+                    // Update summary cards
+                    document.getElementById('totalTransactions').textContent = filteredTransactions.length.toLocaleString();
+                    document.getElementById('totalAmount').textContent = totalAmount.toLocaleString('id-ID', {style: 'currency', currency: 'IDR'});
+                    document.getElementById('uniqueAccounts').textContent = uniqueAccounts.size.toLocaleString();
+                    document.getElementById('avgAmount').textContent = (totalAmount / transactions.length).toLocaleString('id-ID', {style: 'currency', currency: 'IDR', minimumFractionDigits: 0});
+
+                    // Populate table
+                    populateTable(filteredTransactions);
+
+                    // Store data for export
+                    window.currentTransactions = transactions;
+                    window.filteredTransactions = filteredTransactions;
+
+                    showNotification(`Processed ${transactions.length} transactions (${filteredTransactions.length} after filters)!`);
+                } catch (error) {
+                    console.error('Error processing data:', error);
+                    showNotification('Error processing data! Please check the format.');
+                } finally {
+                    showSpinner(false);
+                }
+            }, 100);
+        }
+
+        // Apply filters to transactions
+        function applyFilters(transactions) {
+            const bankFilter = document.getElementById('filterBank').value;
+            const minAmount = parseFloat(document.getElementById('filterMinAmount').value) || 0;
+            const statusFilter = document.getElementById('filterStatus').value;
+            
+            return transactions.filter(transaction => {
+                // Bank filter
+                if (bankFilter && transaction.bank !== bankFilter) {
+                    return false;
+                }
+                
+                // Amount filter
+                if (transaction.amount < minAmount) {
+                    return false;
+                }
+                
+                // Status filter
+                if (statusFilter && transaction.status !== statusFilter) {
+                    return false;
+                }
+                
+                return true;
+            });
+        }
+
+        // Populate table with transactions
+        function populateTable(transactions) {
+            const tableBody = document.querySelector('#transactionTable tbody');
+            tableBody.innerHTML = '';
+            
+            const displayCount = parseInt(document.getElementById('resultsSlider').value);
+            const displayTransactions = displayCount === 100 ? transactions : transactions.slice(0, displayCount);
+            
+            if (displayTransactions.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td colspan="7" class="text-center">No transactions match the current filters</td>`;
+                tableBody.appendChild(row);
+                return;
+            }
+            
+            displayTransactions.forEach(transaction => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${transaction.playerAccount}</td>
+                    <td>${transaction.bank}</td>
+                    <td>${transaction.accountNumber}</td>
+                    <td>${transaction.accountName}</td>
+                    <td>${transaction.amount.toLocaleString('id-ID', {style: 'currency', currency: 'IDR', minimumFractionDigits: 0})}</td>
+                    <td>${transaction.date}</td>
+                    <td><span class="badge ${transaction.status === 'Pass' ? 'bg-success' : transaction.status === 'Fail' ? 'bg-danger' : 'bg-warning'}">${transaction.status}</span></td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Export to Excel
+        function exportToExcel() {
+            if (!window.filteredTransactions || window.filteredTransactions.length === 0) {
+                showNotification('No data to export!');
+                return;
+            }
+
+            showSpinner(true);
+            
+            setTimeout(() => {
+                try {
+                    const ws = XLSX.utils.json_to_sheet(window.filteredTransactions.map(t => ({
+                        'Player Account': t.playerAccount,
+                        'Date': t.date,
+                        'Amount': t.amount,
+                        'Bank': t.bank,
+                        'Account Number': t.accountNumber,
+                        'Account Name': t.accountName,
+                        'Status': t.status
+                    })));
+                    
+                    const wb = XLSX.utils.book_new();
+                    XLSX.utils.book_append_sheet(wb, ws, "Transactions");
+                    
+                    // Get current date for filename
+                    const today = new Date();
+                    const dateStr = `${today.getFullYear()}-${(today.getMonth()+1).toString().padStart(2, '0')}-${today.getDate().toString().padStart(2, '0')}`;
+                    
+                    XLSX.writeFile(wb, `ALHACKER167_Transactions_${dateStr}.xlsx`);
+                    showNotification('Excel file downloaded!');
+                } catch (error) {
+                    console.error('Error exporting to Excel:', error);
+                    showNotification('Error exporting to Excel!');
+                } finally {
+                    showSpinner(false);
+                }
+            }, 100);
+        }
+
+        // Export to CSV
+        function exportToCSV() {
+            if (!window.filteredTransactions || window.filteredTransactions.length === 0) {
+                showNotification('No data to export!');
+                return;
+            }
+
+            showSpinner(true);
+            
+            setTimeout(() => {
+                try {
+                    // Convert transactions to CSV format
+                    const headers = ['Player Account', 'Date', 'Amount', 'Bank', 'Account Number', 'Account Name', 'Status'];
+                    const csvRows = [];
+                    
+                    // Add header row
+                    csvRows.push(headers.join(','));
+                    
+                    // Add data rows
+                    window.filteredTransactions.forEach(t => {
+                        const row = [
+                            `"${t.playerAccount}"`,
+                            `"${t.date}"`,
+                            t.amount,
+                            `"${t.bank}"`,
+                            `"${t.accountNumber}"`,
+                            `"${t.accountName}"`,
+                            `"${t.status}"`
+                        ];
+                        csvRows.push(row.join(','));
+                    });
+                    
+                    // Create CSV string
+                    const csvString = csvRows.join('\n');
+                    
+                    // Create blob and download
+                    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+                    const today = new Date();
+                    const dateStr = `${today.getFullYear()}-${(today.getMonth()+1).toString().padStart(2, '0')}-${today.getDate().toString().padStart(2, '0')}`;
+                    saveAs(blob, `ALHACKER167_Transactions_${dateStr}.csv`);
+                    
+                    showNotification('CSV file downloaded!');
+                } catch (error) {
+                    console.error('Error exporting to CSV:', error);
+                    showNotification('Error exporting to CSV!');
+                } finally {
+                    showSpinner(false);
+                }
+            }, 100);
+        }
+
+        // Clear all data
+        function clearData() {
+            document.getElementById('transactionData').value = '';
+            document.querySelector('#transactionTable tbody').innerHTML = '';
+            document.getElementById('totalTransactions').textContent = '0';
+            document.getElementById('totalAmount').textContent = '0';
+            document.getElementById('uniqueAccounts').textContent = '0';
+            document.getElementById('avgAmount').textContent = '0';
+            document.getElementById('filterBank').value = '';
+            document.getElementById('filterMinAmount').value = '';
+            document.getElementById('filterStatus').value = '';
+            
+            window.currentTransactions = null;
+            window.filteredTransactions = null;
+            
+            showNotification('Data cleared!');
+        }
+
+        // Update slider value display
+        function updateSliderValue() {
+            const slider = document.getElementById('resultsSlider');
+            const valueDisplay = document.getElementById('sliderValue');
+            
+            if (slider.value === '100') {
+                valueDisplay.textContent = 'All';
+            } else {
+                valueDisplay.textContent = slider.value;
+            }
+            
+            // If we have data, reprocess to update display count
+            if (window.filteredTransactions) {
+                populateTable(window.filteredTransactions);
+            }
+        }
+
+        // Apply filters and refresh table
+        function applyFiltersAndRefresh() {
+            if (window.currentTransactions) {
+                window.filteredTransactions = applyFilters(window.currentTransactions);
+                populateTable(window.filteredTransactions);
+                
+                // Update total count after filtering
+                document.getElementById('totalTransactions').textContent = window.filteredTransactions.length.toLocaleString();
+            }
+        }
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            createStars();
+            createMeteors();
+            
+            document.getElementById('themeToggle').addEventListener('click', toggleDarkMode);
+            document.getElementById('processData').addEventListener('click', processData);
+            document.getElementById('exportExcel').addEventListener('click', exportToExcel);
+            document.getElementById('exportCSV').addEventListener('click', exportToCSV);
+            document.getElementById('clearData').addEventListener('click', clearData);
+            document.getElementById('resultsSlider').addEventListener('input', updateSliderValue);
+            
+            // Add event listeners for filters
+            document.getElementById('filterBank').addEventListener('change', applyFiltersAndRefresh);
+            document.getElementById('filterMinAmount').addEventListener('input', applyFiltersAndRefresh);
+            document.getElementById('filterStatus').addEventListener('change', applyFiltersAndRefresh);
+        });
+    </script>
+</body>
+</html>
