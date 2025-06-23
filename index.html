@@ -314,6 +314,12 @@
         .dark-mode .filter-section {
             background-color: rgba(255,255,255,0.05);
         }
+
+        /* Duplicate accounts highlight */
+        .duplicate-badge {
+            background-color: #ffc107;
+            color: #000;
+        }
     </style>
 </head>
 <body>
@@ -354,28 +360,28 @@
                             <h6><i class="fas fa-filter me-2"></i>Advanced Filters</h6>
                             <div class="row">
                                 <div class="col-md-4">
-    <label for="filterBank" class="form-label">Filter by Bank:</label>
-    <select class="form-select" id="filterBank">
-        <option value="">All Banks</option>
-        <option value="BRI">BRI</option>
-        <option value="BNI">BNI</option>
-        <option value="BCA">BCA</option>
-        <option value="MANDIRI">Mandiri</option>
-        <option value="BSI">BSI (Bank Syariah Indonesia)</option>
-        <option value="DANAMON">Danamon</option>
-        <option value="CIMB">CIMB Niaga</option>
-        <option value="MAYBANK">Maybank</option>
-        <option value="OCBC">OCBC NISP</option>
-        <option value="PANIN">Panin Bank</option>
-        <option value="PERMATA">Permata Bank</option>
-        <option value="DANA">DANA</option>
-        <option value="LINKAJA">LinkAja</option>
-        <option value="GOPAY">GoPay</option>
-        <option value="OVO">OVO</option>
-        <option value="SHOPEEPAY">ShopeePay</option>
-        <option value="OTHER">Other/Lainnya</option>
-    </select>
-</div>
+                                    <label for="filterBank" class="form-label">Filter by Bank:</label>
+                                    <select class="form-select" id="filterBank">
+                                        <option value="">All Banks</option>
+                                        <option value="BRI">BRI</option>
+                                        <option value="BNI">BNI</option>
+                                        <option value="BCA">BCA</option>
+                                        <option value="MANDIRI">Mandiri</option>
+                                        <option value="BSI">BSI (Bank Syariah Indonesia)</option>
+                                        <option value="DANAMON">Danamon</option>
+                                        <option value="CIMB">CIMB Niaga</option>
+                                        <option value="MAYBANK">Maybank</option>
+                                        <option value="OCBC">OCBC NISP</option>
+                                        <option value="PANIN">Panin Bank</option>
+                                        <option value="PERMATA">Permata Bank</option>
+                                        <option value="DANA">DANA</option>
+                                        <option value="LINKAJA">LinkAja</option>
+                                        <option value="GOPAY">GoPay</option>
+                                        <option value="OVO">OVO</option>
+                                        <option value="SHOPEEPAY">ShopeePay</option>
+                                        <option value="OTHER">Other/Lainnya</option>
+                                    </select>
+                                </div>
                                 <div class="col-md-4">
                                     <label for="filterMinAmount" class="form-label">Minimum Amount:</label>
                                     <input type="number" class="form-control" id="filterMinAmount" placeholder="Min amount">
@@ -403,7 +409,7 @@
                 <div class="card summary-card">
                     <i class="fas fa-university"></i>
                     <div class="count" id="totalTransactions">0</div>
-                    <div class="label">Total Transactions</div>
+                    <div class="label">Unique Accounts</div>
                 </div>
             </div>
             <div class="col-md-3">
@@ -417,14 +423,14 @@
                 <div class="card summary-card">
                     <i class="fas fa-users"></i>
                     <div class="count" id="uniqueAccounts">0</div>
-                    <div class="label">Unique Accounts</div>
+                    <div class="label">Player Accounts</div>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="card summary-card">
-                    <i class="fas fa-chart-line"></i>
-                    <div class="count" id="avgAmount">0</div>
-                    <div class="label">Average Amount</div>
+                    <i class="fas fa-clone"></i>
+                    <div class="count" id="duplicateAccounts">0</div>
+                    <div class="label">Duplicate Accounts</div>
                 </div>
             </div>
         </div>
@@ -433,7 +439,7 @@
             <div class="col-md-12">
                 <div class="card">
                     <div class="card-body">
-                        <h5 class="card-title"><i class="fas fa-table me-2"></i>Transaction Summary</h5>
+                        <h5 class="card-title"><i class="fas fa-table me-2"></i>Unique Account Transactions</h5>
                         <div class="mb-3">
                             <div class="slider-container">
                                 <label for="resultsSlider" class="form-label">Number of results to display: <span id="sliderValue">All</span></label>
@@ -461,6 +467,33 @@
                         <div class="d-flex justify-content-between mt-3">
                             <button class="btn btn-primary" id="exportExcel"><i class="fas fa-file-excel me-2"></i>Export to Excel</button>
                             <button class="btn btn-success" id="exportCSV"><i class="fas fa-file-csv me-2"></i>Export to CSV</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="fas fa-clone me-2"></i>Duplicate Account Data</h5>
+                        <div class="table-responsive">
+                            <table class="table table-hover" id="duplicateTable">
+                                <thead>
+                                    <tr>
+                                        <th>Account Number</th>
+                                        <th>Account Name</th>
+                                        <th>Bank</th>
+                                        <th>Transaction Count</th>
+                                        <th>Total Amount</th>
+                                        <th>Player Accounts</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Duplicate data will be inserted here -->
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
@@ -577,6 +610,7 @@
 
                     // Process each line
                     const accountMap = new Map(); // To track unique account number/name pairs
+                    const duplicateMap = new Map(); // To track duplicate accounts
                     
                     lines.forEach(line => {
                         if (!line.trim()) return; // Skip empty lines
@@ -592,9 +626,29 @@
                             const status = columns[11] ? columns[11].trim() : 'Unknown';
                             
                             // Create unique key for account
-                            const accountKey = `${accountNumber}|${accountName}`;
+                            const accountKey = `${accountNumber}|${accountName}|${bank}`;
                             
-                            // Only add if this account hasn't been processed yet
+                            // Track all transactions for duplicate detection
+                            if (!duplicateMap.has(accountKey)) {
+                                duplicateMap.set(accountKey, {
+                                    accountNumber: accountNumber,
+                                    accountName: accountName,
+                                    bank: bank,
+                                    transactions: [],
+                                    playerAccounts: new Set()
+                                });
+                            }
+                            
+                            const accountData = duplicateMap.get(accountKey);
+                            accountData.transactions.push({
+                                playerAccount: playerAccount,
+                                date: date,
+                                amount: amount,
+                                status: status
+                            });
+                            accountData.playerAccounts.add(playerAccount);
+                            
+                            // Only add to main table if this is the first time seeing this account
                             if (!accountMap.has(accountKey)) {
                                 accountMap.set(accountKey, true);
                                 
@@ -614,23 +668,41 @@
                         }
                     });
 
-                    // Apply filters
+                    // Apply filters to main transactions
                     const filteredTransactions = applyFilters(transactions);
+
+                    // Process duplicate data
+                    const duplicateAccounts = [];
+                    duplicateMap.forEach((value, key) => {
+                        if (value.transactions.length > 1) {
+                            const totalAmount = value.transactions.reduce((sum, t) => sum + t.amount, 0);
+                            duplicateAccounts.push({
+                                accountNumber: value.accountNumber,
+                                accountName: value.accountName,
+                                bank: value.bank,
+                                totalTransactions: value.transactions.length,
+                                totalAmount: totalAmount,
+                                playerAccounts: Array.from(value.playerAccounts).join(', ')
+                            });
+                        }
+                    });
 
                     // Update summary cards
                     document.getElementById('totalTransactions').textContent = filteredTransactions.length.toLocaleString();
                     document.getElementById('totalAmount').textContent = totalAmount.toLocaleString('id-ID', {style: 'currency', currency: 'IDR'});
                     document.getElementById('uniqueAccounts').textContent = uniqueAccounts.size.toLocaleString();
-                    document.getElementById('avgAmount').textContent = (totalAmount / transactions.length).toLocaleString('id-ID', {style: 'currency', currency: 'IDR', minimumFractionDigits: 0});
+                    document.getElementById('duplicateAccounts').textContent = duplicateAccounts.length.toLocaleString();
 
-                    // Populate table
+                    // Populate tables
                     populateTable(filteredTransactions);
+                    populateDuplicateTable(duplicateAccounts);
 
                     // Store data for export
                     window.currentTransactions = transactions;
                     window.filteredTransactions = filteredTransactions;
+                    window.duplicateAccounts = duplicateAccounts;
 
-                    showNotification(`Processed ${transactions.length} transactions (${filteredTransactions.length} after filters)!`);
+                    showNotification(`Processed ${transactions.length} unique accounts (${duplicateAccounts.length} with duplicates)!`);
                 } catch (error) {
                     console.error('Error processing data:', error);
                     showNotification('Error processing data! Please check the format.');
@@ -696,6 +768,35 @@
             });
         }
 
+        // Populate duplicate table
+        function populateDuplicateTable(duplicates) {
+            const tableBody = document.querySelector('#duplicateTable tbody');
+            tableBody.innerHTML = '';
+            
+            if (duplicates.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td colspan="6" class="text-center">No duplicate accounts found</td>`;
+                tableBody.appendChild(row);
+                return;
+            }
+            
+            // Sort by highest transaction count first
+            duplicates.sort((a, b) => b.totalTransactions - a.totalTransactions);
+            
+            duplicates.forEach(account => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${account.accountNumber}</td>
+                    <td>${account.accountName}</td>
+                    <td>${account.bank}</td>
+                    <td>${account.totalTransactions}</td>
+                    <td>${account.totalAmount.toLocaleString('id-ID', {style: 'currency', currency: 'IDR', minimumFractionDigits: 0})}</td>
+                    <td>${account.playerAccounts}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
         // Export to Excel
         function exportToExcel() {
             if (!window.filteredTransactions || window.filteredTransactions.length === 0) {
@@ -707,7 +808,11 @@
             
             setTimeout(() => {
                 try {
-                    const ws = XLSX.utils.json_to_sheet(window.filteredTransactions.map(t => ({
+                    // Create workbook with two sheets
+                    const wb = XLSX.utils.book_new();
+                    
+                    // Main transactions sheet
+                    const ws1 = XLSX.utils.json_to_sheet(window.filteredTransactions.map(t => ({
                         'Player Account': t.playerAccount,
                         'Date': t.date,
                         'Amount': t.amount,
@@ -716,16 +821,27 @@
                         'Account Name': t.accountName,
                         'Status': t.status
                     })));
+                    XLSX.utils.book_append_sheet(wb, ws1, "Unique Accounts");
                     
-                    const wb = XLSX.utils.book_new();
-                    XLSX.utils.book_append_sheet(wb, ws, "Transactions");
+                    // Duplicates sheet
+                    if (window.duplicateAccounts && window.duplicateAccounts.length > 0) {
+                        const ws2 = XLSX.utils.json_to_sheet(window.duplicateAccounts.map(a => ({
+                            'Account Number': a.accountNumber,
+                            'Account Name': a.accountName,
+                            'Bank': a.bank,
+                            'Transaction Count': a.totalTransactions,
+                            'Total Amount': a.totalAmount,
+                            'Player Accounts': a.playerAccounts
+                        })));
+                        XLSX.utils.book_append_sheet(wb, ws2, "Duplicate Accounts");
+                    }
                     
                     // Get current date for filename
                     const today = new Date();
                     const dateStr = `${today.getFullYear()}-${(today.getMonth()+1).toString().padStart(2, '0')}-${today.getDate().toString().padStart(2, '0')}`;
                     
                     XLSX.writeFile(wb, `ALHACKER167_Transactions_${dateStr}.xlsx`);
-                    showNotification('Excel file downloaded!');
+                    showNotification('Excel file downloaded with duplicate report!');
                 } catch (error) {
                     console.error('Error exporting to Excel:', error);
                     showNotification('Error exporting to Excel!');
@@ -790,16 +906,18 @@
         function clearData() {
             document.getElementById('transactionData').value = '';
             document.querySelector('#transactionTable tbody').innerHTML = '';
+            document.querySelector('#duplicateTable tbody').innerHTML = '';
             document.getElementById('totalTransactions').textContent = '0';
             document.getElementById('totalAmount').textContent = '0';
             document.getElementById('uniqueAccounts').textContent = '0';
-            document.getElementById('avgAmount').textContent = '0';
+            document.getElementById('duplicateAccounts').textContent = '0';
             document.getElementById('filterBank').value = '';
             document.getElementById('filterMinAmount').value = '';
             document.getElementById('filterStatus').value = '';
             
             window.currentTransactions = null;
             window.filteredTransactions = null;
+            window.duplicateAccounts = null;
             
             showNotification('Data cleared!');
         }
